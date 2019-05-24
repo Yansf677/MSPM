@@ -33,7 +33,6 @@ Q_ctrl = g * chi2inv(ALPHA, h);
 
 %% online testing
 T2 = zeros(N, 1); Q = zeros(N, 1);
-s = ones(N, 1); I = eye(N);
 for i = 1:N
      Ktest = constructKernel(X_test(i,:), X_train, options);
      Kp = (Ktest - s' * K / n) * (I - s * s' / n);
