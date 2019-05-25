@@ -11,19 +11,20 @@ X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - repmat(Ymean, N, 1))./repmat(Ystd, N, 1);
 
 %% offline training
-% pca
-[P, T, Latent, Taquare] = pca(X_train); 
-k=0;
-for i = 1:size(Latent, 1)
-    cpv = sum(Latent(1:i)) / sum(Latent);
-    if cpv >= 0.85
-        k = i; break;
-    end
+% pcr
+fold = 5; indices = crossvalind('Kfold', n, fold); RMSE = zeros(m,1);
+for i = 1:m
+   for j = 1:fold
+      test = (indices == j); train = ~test;
+      [T, P, Q] = pcr(X_train(train,:), Y_train(train,:), i);
+      Y_pre = X_train(test,:) * P * Q';
+      RMSE(i) = RMSE(i) +  mse(Y_pre, Y_train(test,:)) / fold;
+   end
 end
-T = T(:, 1:k); P = P(:, 1:k);
+pc = find(RMSE==min(RMSE));
+[T, P, Q] = pcr(X_train, Y_train, pc);
+Y_e = T * Q';
 
-% regression
-Q = ((T' * T) \ (T') * Y_train)'; Y_e = T * Q';
 [Qy, Ty, Latent_y, Tsquare_y] = pca(Y_e);
 Py = (((Ty') * Ty) \ (Ty') * X_train)';
 
