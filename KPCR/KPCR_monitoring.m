@@ -13,54 +13,57 @@ X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - 
 %% offline training
 % KPCA
 options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
-K = constructKernel(X_train,[],options);
-s = ones(n,1); I = eye(n); Kc = (I - s*s'/n) * K * (I - s*s'/n); 
-[W, L_W] = eig(Kc./n); W = W*(L_W^(-0.5)); T = Kc*W;
+K = constructKernel(X_train, [], options);
+s = ones(n, 1); I = eye(n); Kc = (I - s * s' / n) * K * (I - s * s' / n); 
+[W, L_W] = eig(Kc./n); W = W * (L_W^(-0.5)); T = Kc*W;
 
 Latent = zeros(size(L_W, 1), 1);
 for j = 1:size(L_W, 1)
     Latent(j) = L_W(j, j);
 end
-pc=0;
+k = 0;
 for i=1:n
     cpv = sum(Latent(1:i))/sum(Latent);
     if cpv >= 0.9
-        pc = i; break;
+        k = i; break;
     end
 end
-T = T(:, 1:pc); W = W(:, 1:pc);
+T = T(:, 1:k); W = W(:, 1:k);
+
 % regression
 Q = ((T' * T) \ T' * Y_train)'; Y_e = T * Q';
 [Qy, Ty, Latent_y, Tsquare_y] = pca(Y_e);
-Zy = eye(n) - Ty * pinv(Ty' * Ty) * Ty'; Ko = Zy * K * Zy';
+
+Zy = eye(n) - Ty * pinv(Ty' * Ty) * Ty'; Ko = Zy * Kc * Zy';
 [Wo, L_Wo] = eig(Ko./n); Wo = Wo * (L_Wo^(-0.5)); To = Kc * Wo;
 
+ko=0;
 Latento=zeros(size(L_Wo,1),1);
 for j=1:size(L_Wo,1)
     Latento(j)=L_Wo(j,j);
 end
-pco=0;
-for i=1:n
-    cpv=sum(Latento(1:i))/sum(Latento);
-    if cpv>=0.999
-        pco=i;
+for i = 1:n
+    cpv = sum(Latento(1:i))/sum(Latento);
+    if cpv >= 0.999
+        ko=i;
         break;
     end
 end
-To = To(:, 1:pco); Wo = Wo(:, 1:pco);
+To = To(:, 1:ko); Wo = Wo(:, 1:ko);
 
 % control limit
 ALPHA=0.97;
-Ty_ctrl = 1*(n-1)*(n+1) * finv(ALPHA,1,n-1) / (n*(n-1));
-To_ctrl = pco*(n-1)*(n+1) * finv(ALPHA,pco,n-pco) / (n*(n-pco));
+Ty_ctrl = 1*(n-1)*(n+1) * finv(ALPHA, 1, n-1) / (n*(n-1));
+To_ctrl = ko*(n-1)*(n+1) * finv(ALPHA, ko, n-ko) / (n*(n-ko));
 
 %% online testing
 Ty2 = zeros(N, 1); To2 = zeros(N, 1);
 for i=1:N
-    k_test=constructKernel(X_test(i,:), X_train, options);kc_test=(k_test-s'*K/n)*(I-s*s'/n);
+    k_test = constructKernel(X_test(i,:), X_train, options);
+    kc_test = (k_test - s' * K / n) * (I - s * s' / n);
     t_test = kc_test * W;
     
-    tynew = t_test * Q' * Qy; % row vector
+    tynew = t_test * Q' * Qy; 
     Ty2(i) = tynew * pinv(Ty' * Ty / (n-1)) * tynew';
     
     tonew = kc_test * Zy' * Wo - tynew * pinv(Ty'*Ty) * Ty' * Kc * Zy' * Wo;
@@ -90,17 +93,13 @@ FAR_Ty = FAR_Ty / 160; FAR_To = FAR_To / 160;
 FDR_Ty = FDR_Ty / 160; FDR_To = FDR_To / 160;
 
 % ROC curves including f1-score
-class_1 = Ty2(1:160); 
-class_2 = Ty2(161:960);
-figure;
-roc_Ty = roc_curve(class_1, class_2);
+class_1 = Ty2(1:160); class_2 = Ty2(161:960);
+figure; roc_Ty = roc_curve(class_1, class_2);
 
-class_1 = To2(1:160); 
-class_2 = To2(161:960);
-figure;
-roc_To = roc_curve(class_1, class_2);
+class_1 = To2(1:160); class_2 = To2(161:960);
+figure; roc_To = roc_curve(class_1, class_2);
 
 % statistics plot
 figure;
-subplot(2,1,1);plot(Ty2,'k');title('KPCR');hold on;plot(Ty_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('Ty^2');hold off;
-subplot(2,1,2);plot(To2,'k');title('KPCR');hold on;plot(To_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('To^2');hold off;
+subplot(2,1,1);plot(Ty2,'k');title('KPCR');hold on;plot(Ty_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('Ty^2');legend('statistics','threshold');hold off;
+subplot(2,1,2);plot(To2,'k');title('KPCR');hold on;plot(To_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('To^2');legend('statistics','threshold');hold off;

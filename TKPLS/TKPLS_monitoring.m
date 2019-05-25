@@ -12,9 +12,19 @@ X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - 
 
 %% offline training
 % kpls
-pc = 8;
 options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
-[t, u, Kc, K] = kpls(X_train,Y_train,m,options);
+% fold = 5; indices = crossvalind('Kfold', n, fold); RMSE = zeros(m,1);
+% for i = 1:m
+%    for j = 1:fold
+%       test = (indices == j); train = ~test;
+%       [t, u, Kc, K, q] = kpls(X_train(train,:), Y_train(train,:), i, options);
+%       Y_pre = Kc * u * q';
+%       RMSE(i) = RMSE(i) +  mse(Y_pre, Y_train(test,:)) / fold;
+%    end
+% end
+% pc = find(RMSE==min(RMSE));
+pc = 5; % base on the above crossvalidation
+[t, u, Kc, K, ~] = kpls(X_train, Y_train, pc, options);
 
 s = ones(n,1); I = eye(n);
 temp = t(:,pc)' * Kc * u(:,pc);
@@ -124,35 +134,23 @@ FAR_Ty = FAR_Ty / 160; FAR_To = FAR_To / 160; FAR_Tr = FAR_Tr / 160; FAR_Qr = FA
 FDR_Ty = FDR_Ty / 800; FDR_To = FDR_To / 800; FDR_Tr = FDR_Tr / 800; FDR_Qr = FDR_Qr / 800;
 
 % ROC curves including f1-score
-class_1 = Ty2(1:160); 
-class_2 = Ty2(161:960);
-figure;
-roc_Ty = roc_curve(class_1, class_2);
+class_1 = Ty2(1:160); class_2 = Ty2(161:960);
+figure; roc_Ty = roc_curve(class_1, class_2);
 
-class_1 = To2(1:160); 
-class_2 = To2(161:960);
-figure;
-roc_To = roc_curve(class_1, class_2);
+class_1 = To2(1:160); class_2 = To2(161:960);
+figure; roc_To = roc_curve(class_1, class_2);
 
-class_1 = Tr2(1:160); 
-class_2 = Tr2(161:960);
-figure;
-roc_Tr = roc_curve(class_1, class_2);
+class_1 = Tr2(1:160); class_2 = Tr2(161:960);
+figure; roc_Tr = roc_curve(class_1, class_2);
 
-class_1 = Qr(1:160); 
-class_2 = Qr(161:960);
-figure;
-roc_Q = roc_curve(class_1, class_2);
+class_1 = Qr(1:160); class_2 = Qr(161:960);
+figure; roc_Q = roc_curve(class_1, class_2);
 
 % statistics plot
 figure;
-subplot(2,2,1);plot(Ty2,'k');title('TKPLS');hold on;plot(Ty_ctrl*ones(1, N),'k--');xlabel('sample');ylabel('Ty^2');legend('statistics','threshold');
-hold off
-subplot(2,2,2);plot(To2,'k');title('TKPLS');hold on;plot(To_ctrl*ones(1, N),'k--');xlabel('sample');ylabel('To^2');legend('statistics','threshold');
-hold off;
-subplot(2,2,3);plot(Tr2,'k');title('TKPLS');hold on;plot(Tr_ctrl*ones(1, N),'k--');xlabel('sample');ylabel('Tr^2');legend('statistics','threshold')
-hold off
-subplot(2,2,4);plot(Qr,'k');title('TKPLS');hold on;plot(Qr_ctrl*ones(1, N),'k--');xlabel('sample');ylabel('Q');legend('statistics','threshold')
-hold off
+subplot(2,2,1);plot(Ty2,'k');title('TKPLS');hold on;plot(Ty_ctrl*ones(1, N),'k--');xlabel('sample');ylabel('Ty^2');legend('statistics','threshold');hold off
+subplot(2,2,2);plot(To2,'k');title('TKPLS');hold on;plot(To_ctrl*ones(1, N),'k--');xlabel('sample');ylabel('To^2');legend('statistics','threshold');hold off;
+subplot(2,2,3);plot(Tr2,'k');title('TKPLS');hold on;plot(Tr_ctrl*ones(1, N),'k--');xlabel('sample');ylabel('Tr^2');legend('statistics','threshold');hold off
+subplot(2,2,4);plot(Qr,'k');title('TKPLS');hold on;plot(Qr_ctrl*ones(1, N),'k--');xlabel('sample');ylabel('Q');legend('statistics','threshold');hold off
 
  

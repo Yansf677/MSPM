@@ -1,14 +1,16 @@
 clc
 clear
+
 %% data preprocessing
 load TEdata.mat; IDV = 1; 
-X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
-X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
+X_train = data(:, [1:22,42:52], 22);
+X_test = data(:, [1:22,42:52], IDV);
 
-[~, m] = size(X_train); [n, p] = size(Y_train);
-[X_train, Xmean, Xstd] = zscore(X_train); [Y_train, Ymean, Ystd] = zscore(Y_train);
+[n, m] = size(X_train); 
+[X_train, Xmean, Xstd] = zscore(X_train); 
+
 [N, ~] = size(X_test);
-X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - repmat(Ymean, N, 1))./repmat(Ystd, N, 1);
+X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1);
 
 %% offline training
 % pca
@@ -21,6 +23,7 @@ for i = 1:size(Latent,1)
     end
 end
 T = T(:, 1:pc); P = P(:, 1:pc);
+
 % control limit
 ALPHA=0.97;
 T_ctrl = pc * (n-1) * (n+1) * finv(ALPHA, pc, n - pc) / (n * (n - pc));
@@ -40,6 +43,7 @@ for i = 1:N
    T2(i) = tnew * diag(1./Latent(1:pc)) * tnew';
    Q(i) = ((eye(m) - P * P') * X_test(i,:)')' * ((eye(m) - P * P') * X_test(i,:)');
 end
+
 % type I and type II errors
 FAR_T = 0; FDR_T = 0;
 FAR_Q = 0; FDR_Q = 0;
@@ -63,19 +67,16 @@ FAR_T = FAR_T / 160; FAR_Q = FAR_Q / 160;
 FDR_T = FDR_T / 800; FDR_Q = FDR_Q / 800;
 
 % ROC curves including f1-score
-class_1 = T2(1:160); 
-class_2 = T2(161:960);
-figure;
-roc_Ty = roc_curve(class_1, class_2);
+class_1 = T2(1:160); class_2 = T2(161:960);
+figure; roc_Ty = roc_curve(class_1, class_2);
 
-class_1 = Q(1:160); 
-class_2 = Q(161:960);
-figure;
-roc_To = roc_curve(class_1, class_2);
+class_1 = Q(1:160); class_2 = Q(161:960);
+figure; roc_To = roc_curve(class_1, class_2);
+
 % statistics plot
 figure;
-subplot(2,1,1);plot(T2,'k');title('PCA');hold on;plot(T_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('T^2');hold off
-subplot(2,1,2);plot(Q,'k');title('PCA');hold on;plot(Q_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('Q');hold off
+subplot(2,1,1);plot(T2,'k');title('PCA');hold on;plot(T_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('T^2');legend('statistics','threshold');hold off
+subplot(2,1,2);plot(Q,'k');title('PCA');hold on;plot(Q_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('Q');legend('statistics','threshold');hold off
 
 
 

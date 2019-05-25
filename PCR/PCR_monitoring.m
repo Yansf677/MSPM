@@ -12,42 +12,46 @@ X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - 
 
 %% offline training
 % pca
-[P, T, Latent, Taquare] = pca(X_train); k=0;
+[P, T, Latent, Taquare] = pca(X_train); 
+k=0;
 for i = 1:size(Latent, 1)
     cpv = sum(Latent(1:i)) / sum(Latent);
     if cpv >= 0.85
         k = i; break;
     end
 end
-T=T(:,1:k);P=P(:,1:k);
+T = T(:, 1:k); P = P(:, 1:k);
+
 % regression
-Q = ((T' * T) \ (T') * Y_train)'; 
-Ty = T * Q';
+Q = ((T' * T) \ (T') * Y_train)'; Y_e = T * Q';
+[Qy, Ty, Latent_y, Tsquare_y] = pca(Y_e);
 Py = (((Ty') * Ty) \ (Ty') * X_train)';
+
 % subspace division
 Xy = Ty * Py'; Xo = X_train - Xy;
 
-[Po, To, Latento, Taquareo] = pca(Xo); ko=0;
+[Po, To, Latento, Taquareo] = pca(Xo); 
+ko=0;
 for i = 1:size(Latento,1)
     cpvo = sum(Latento(1:i)) / sum(Latento);
     if cpvo >= 0.999
         ko = i; break;
     end
 end
-To = To(:,1:ko); Po = Po(:,1:ko);
+To = To(:, 1:ko); Po = Po(:, 1:ko);
 
 % control limit
 ALPHA=0.97;
-Ty_ctrl = 1*(n-1)*(n+1) * finv(ALPHA,1,n-1) / (n*(n-1));
-To_ctrl = ko*(n-1)*(n+1) * finv(ALPHA,ko,n-ko) / (n*(n-ko));
+Ty_ctrl = 1*(n-1)*(n+1) * finv(ALPHA, 1, n-1) / (n*(n-1));
+To_ctrl = ko*(n-1)*(n+1) * finv(ALPHA, ko, n-ko) / (n*(n-ko));
 
 %% online testing
 Ty2 = zeros(N, 1); To2 = zeros(N, 1);
 for i=1:N
    tynew = X_test(i,:) * P * Q';
-   Ty2(i) = tynew * pinv(((Ty')*Ty)./(n-1))*(tynew');
-   tonew = (X_test(i,:) - X_test(i,:) * P * Q' * Py') * Po;
-   To2(i) = tonew * pinv(((To')*To)./(n-1)) * (tonew');
+   Ty2(i) = tynew * pinv(((Ty')*Ty) / (n-1)) * (tynew');
+   tonew = (X_test(i,:) - X_test(i,:) * P * Q' * Qy * Py') * Po;
+   To2(i) = tonew * pinv(((To')*To) / (n-1)) * (tonew');
 end
 
 % type I and type II errors
@@ -70,23 +74,19 @@ for i = 161:960
     end                     
 end
 FAR_Ty = FAR_Ty / 160; FAR_To = FAR_To / 160;
-FDR_Ty = FDR_Ty / 160; FDR_To = FDR_To / 160;
+FDR_Ty = FDR_Ty / 800; FDR_To = FDR_To / 800;
 
 % ROC curves including f1-score
-class_1 = Ty2(1:160); 
-class_2 = Ty2(161:960);
-figure;
-roc_Ty = roc_curve(class_1, class_2);
+class_1 = Ty2(1:160); class_2 = Ty2(161:960);
+figure; roc_Ty = roc_curve(class_1, class_2);
 
-class_1 = To2(1:160); 
-class_2 = To2(161:960);
-figure;
-roc_To = roc_curve(class_1, class_2);
+class_1 = To2(1:160); class_2 = To2(161:960);
+figure; roc_To = roc_curve(class_1, class_2);
 
 % statistics plot
 figure;
-subplot(2,1,1);plot(Ty2,'k');title('PCR');hold on;plot(Ty_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('Ty^2');hold off;
-subplot(2,1,2);plot(To2,'k');title('PCR');hold on;plot(To_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('To^2');hold off;
+subplot(2,1,1);plot(Ty2,'k');title('PCR');hold on;plot(Ty_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('Ty^2');legend('statistics','threshold');hold off;
+subplot(2,1,2);plot(To2,'k');title('PCR');hold on;plot(To_ctrl*ones(1,N),'k--');xlabel('sample');ylabel('To^2');legend('statistics','threshold');hold off;
 
 
  

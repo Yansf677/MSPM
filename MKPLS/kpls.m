@@ -1,5 +1,6 @@
-function [t,u,Kc,K]=kpls(X,Y,m,options)
-n=size(X,1);
+function [t,u,Kc,K,q] = kpls(X,Y,pc,options)
+
+[n,m] = size(X);
 K = constructKernel(X,[],options);
 I=eye(n);s=ones(n,1);
 Kb=(I-s*s'/n)*K*(I-s*s'/n);
@@ -9,6 +10,7 @@ for i=1:m
     u(:,i)=Y; 
     t(:,i)=Y;
 end
+
 for i=1:m    
     while 1
     	told=t(:,i);
@@ -23,4 +25,6 @@ for i=1:m
     end
     Kb=(I-t(:,i)*t(:,i)')*Kb*(I-t(:,i)*t(:,i)');
     Y=Y-t(:,i)*t(:,i)'*Y;
+end
+t = t(:,1:pc);u = u(:,1:pc);q = q(:,1:pc);
 end

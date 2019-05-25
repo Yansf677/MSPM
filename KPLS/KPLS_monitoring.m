@@ -12,17 +12,27 @@ X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - 
 
 %% offline training
 % kpls
-pc = 8;
 options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
-[t, u, Kc, K] = kpls(X_train, Y_train, pc, options);
+% fold = 5; indices = crossvalind('Kfold', n, fold); RMSE = zeros(m,1);
+% for i = 1:m
+%    for j = 1:fold
+%       test = (indices == j); train = ~test;
+%       [t, u, Kc, K, q] = kpls(X_train(train,:), Y_train(train,:), i, options);
+%       Y_pre = Kc * u * q';
+%       RMSE(i) = RMSE(i) +  mse(Y_pre, Y_train(test,:)) / fold;
+%    end
+% end
+% pc = find(RMSE==min(RMSE));
+pc = 5; % base on the above crossvalidation
+[t, u, Kc, K, ~] = kpls(X_train, Y_train, pc, options);
+
 T2 = zeros(n, 1); Q = zeros(n, 1);s = ones(n,1); I = eye(n);
 for i = 1:n
      Ktrain = constructKernel(X_train(i,:), X_train, options);
      Kp = (Ktrain - s' * K / n) * (I - s * s' / n);
      Tc = Kp * u / (t' * Kc * u);
-     T2(i)=Tc*Tc'*(n-1);
-     Q(i) = 1 - 2 / n * sum(Ktrain) + 1 / n / n * sum(sum(K))...
-               -2 * Tc * t' * Kp' + Tc * t' * Kc * t * Tc';
+     T2(i) = Tc * Tc' * (n-1);
+     Q(i) = 1 - 2 / n * sum(Ktrain) + 1 / n / n * sum(sum(K)) - 2 * Tc * t' * Kp' + Tc * t' * Kc * t * Tc';
 end
 
 % control limit

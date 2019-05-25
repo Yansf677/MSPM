@@ -12,40 +12,31 @@ X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - 
 
 %% offline training
 % pls
-E = X_train; F = Y_train; U(:,1) = Y_train;
+fold = 5; indices = crossvalind('Kfold', n, fold); RMSE = zeros(m,1);
 for i = 1:m
-        uold = U(:,i);
-    while 1
-        w = (uold' * E / (uold' * uold))';
-        w = w / norm(w); R(:,i) = w;
-        T(:,i) = E * w; Q(:,i) = F' * T(:,i) / (T(:,i)' * T(:,i));
-        unew = F * Q(:,i) / Q(:,i)' * Q(:,i);
-    if abs(norm(unew-uold)/norm(uold))<1e-3
-        U(:,i+1) = unew;
-        break;
-    end
-    uold = unew;
-    end
-    P(:,i) = (T(:,i)' * E / (T(:,i)' * T(:,i)))';
-    E = E - T(:,i) * P(:,i)'; F = F - T(:,i) * Q(:,i)';
+   for j = 1:fold
+      test = (indices == j); train = ~test;
+      [~, R, Q, ~] = pls(X_train(train,:), Y_train(train,:), i);
+      Y_pre = X_train(test,:) * R * Q';
+      RMSE(i) = RMSE(i) +  mse(Y_pre, Y_train(test,:)) / fold;
+   end
 end
-
-pc = 6; % base on the reference or cross validation
-T = T(:, 1:pc); R = R(:,1:pc); P = P(:, 1:pc);
+pc = find(RMSE==min(RMSE));
+[T, R, ~, P] = pls(X_train, Y_train, pc);    
 
 % control limit
-ALPHA=0.97;
-T_ctrl = pc*(n-1)*(n+1) * finv(ALPHA, pc, n-pc) / (n * (n-pc));
+ALPHA = 0.97;
+T_ctrl = pc * (n-1) * (n+1) * finv(ALPHA, pc, n-pc) / (n * (n-pc));
 Q = zeros(n, 1);
-for i=1:n
-   Q(i)=(X_train(i,:) - T(i,:) * P') * (X_train(i,:) - T(i,:) * P')';
+for i = 1:n
+   Q(i) = (X_train(i,:) - T(i,:) * P') * (X_train(i,:) - T(i,:) * P')';
 end
 miu = mean(Q); S = var(Q); g = S / (2 * miu); h = 2 * miu * miu / S;
 Q_ctrl = g * chi2inv(ALPHA, h);
 
 %% online testing
 T2 = zeros(N, 1); Q = zeros(N, 1);
-for i=1:N
+for i = 1:N
    tnew = X_test(i,:) * R;
    T2(i) = tnew * pinv((T' * T)/(n-1)) * tnew';
    xnew = X_test(i,:) * (eye(m) - R * P');
@@ -75,15 +66,11 @@ FAR_T = FAR_T / 160; FAR_Q = FAR_Q / 160;
 FDR_T = FDR_T / 800; FDR_Q = FDR_Q / 800;
 
 % ROC curves including f1-score
-class_1 = T2(1:160); 
-class_2 = T2(161:960);
-figure;
-roc_Ty = roc_curve(class_1, class_2);
+class_1 = T2(1:160); class_2 = T2(161:960);
+figure; roc_Ty = roc_curve(class_1, class_2);
 
-class_1 = Q(1:160); 
-class_2 = Q(161:960);
-figure;
-roc_To = roc_curve(class_1, class_2);
+class_1 = Q(1:160); class_2 = Q(161:960);
+figure; roc_To = roc_curve(class_1, class_2);
 
 % statistics plot
 figure;
