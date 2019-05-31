@@ -1,7 +1,7 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 2; 
+load TEdata.mat; IDV = 21; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 
@@ -12,16 +12,17 @@ X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - 
 
 %% offline training
 % pls
-fold = 5; indices = crossvalind('Kfold', n, fold); RMSE = zeros(m,1);
-for i = 1:m
-   for j = 1:fold
-      test = (indices == j); train = ~test;
-      [~, R, Q, ~] = pls(X_train(train,:), Y_train(train,:), i);
-      Y_pre = X_train(test,:) * R * Q';
-      RMSE(i) = RMSE(i) +  mse(Y_pre, Y_train(test,:)) / fold;
-   end
-end
-pc = find(RMSE==min(RMSE));
+% fold = 5; indices = crossvalind('Kfold', n, fold); RMSE = zeros(m,1);
+% for i = 1:m
+%    for j = 1:fold
+%       test = (indices == j); train = ~test;
+%       [~, R, Q, ~] = pls(X_train(train,:), Y_train(train,:), i);
+%       Y_pre = X_train(test,:) * R * Q';
+%       RMSE(i) = RMSE(i) +  mse(Y_pre, Y_train(test,:)) / fold;
+%    end
+% end
+% pc = find(RMSE==min(RMSE));
+pc=6;
 [T, R, Q, P] = pls(X_train, Y_train, pc);    
 
 Y_e = T * Q';
@@ -56,7 +57,7 @@ for i = 1:n
 end
 
 % control limit
-ALPHA = 0.97;
+ALPHA = 0.99;
 Ty_ctrl = 1 * (n-1) * (n+1) * finv(ALPHA, 1, n-1) / (n*(n-1));
 To_ctrl = ko * (n-1) * (n+1) * finv(ALPHA, ko, n-ko) / (n*(n-ko));
 Tr_ctrl = kr * (n-1) * (n+1) * finv(ALPHA, kr, n-kr) / (n*(n-kr));

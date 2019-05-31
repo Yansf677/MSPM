@@ -1,7 +1,7 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 1; 
+load TEdata.mat; IDV = 21; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 
@@ -42,7 +42,7 @@ end
 To = To(:, 1:ko); Po = Po(:, 1:ko);
 
 % control limit
-ALPHA=0.97;
+ALPHA=0.99;
 Ty_ctrl = 1*(n-1)*(n+1) * finv(ALPHA, 1, n-1) / (n*(n-1));
 To_ctrl = ko*(n-1)*(n+1) * finv(ALPHA, ko, n-ko) / (n*(n-ko));
 

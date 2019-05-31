@@ -1,7 +1,7 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 1; 
+load TEdata.mat; IDV = 21; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 
@@ -23,9 +23,9 @@ options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
 %    end
 % end
 % pc = find(RMSE==min(RMSE));
-pc = 5; % base on the above crossvalidation
-[t, u, Kc, K, ~] = kpls(X_train, Y_train, pc, options);
-
+k = 8; % base on the above crossvalidation
+[t, u, Kc, K, ~] = kpls(X_train, Y_train, k, options);
+pc = 1:k;
 s = ones(n,1); I = eye(n);
 temp = t(:,pc)' * Kc * u(:,pc);
 T = Kc * u(:,pc) / temp;
@@ -72,7 +72,7 @@ for i = 1:n
 end
 
 % control limit
-ALPHA = 0.97;
+ALPHA = 0.99;
 Ty_ctrl = (n*n-1) * finv(ALPHA,1,n-1) / (n*(n-1));
 To_ctrl = Ao * (n*n-1) * finv(ALPHA,Ao,n-Ao) / (n*(n-Ao));
 Tr_ctrl = Ar * (n*n-1) * finv(ALPHA,Ar,n-Ar) / (n*(n-Ar));

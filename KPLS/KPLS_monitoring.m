@@ -1,7 +1,7 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 1; 
+load TEdata.mat; IDV = 21; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 
@@ -36,7 +36,7 @@ for i = 1:n
 end
 
 % control limit
-ALPHA=0.97;
+ALPHA=0.99;
 T_ctrl = pc*(n-1)*(n+1) * finv(ALPHA, pc, n-pc) / (n * (n-pc));
 miu = mean(Q); S = var(Q); g = S / (2 * miu); h = 2 * miu * miu / S;
 Q_ctrl = g * chi2inv(ALPHA, h);

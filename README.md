@@ -2,4 +2,6 @@
 
 # method
 
-(1) 
+(1) PCR
+
+(2) KPCR

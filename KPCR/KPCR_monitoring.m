@@ -1,7 +1,7 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 2; 
+load TEdata.mat; IDV = 1; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 
@@ -29,7 +29,7 @@ options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
 %    end
 % end
 % k = find(RMSE==min(RMSE));
-k = 22;
+k = 8;
 K = constructKernel(X_train, [], options);
 s = ones(n, 1); I = eye(n); Kc = (I - s * s' / n) * K * (I - s * s' / n); 
 [W, L_W] = eig(Kc./n); W = W * (L_W^(-0.5)); T = Kc*W;
@@ -57,7 +57,7 @@ end
 To = To(:, 1:ko); Wo = Wo(:, 1:ko);
 
 % control limit
-ALPHA=0.97;
+ALPHA=0.99;
 Ty_ctrl = 1*(n-1)*(n+1) * finv(ALPHA, 1, n-1) / (n*(n-1));
 To_ctrl = ko*(n-1)*(n+1) * finv(ALPHA, ko, n-ko) / (n*(n-ko));
 
@@ -95,7 +95,7 @@ for i = 161:960
     end                     
 end
 FAR_Ty = FAR_Ty / 160; FAR_To = FAR_To / 160;
-FDR_Ty = FDR_Ty / 160; FDR_To = FDR_To / 160;
+FDR_Ty = FDR_Ty / 800; FDR_To = FDR_To / 800;
 
 % ROC curves including f1-score
 class_1 = Ty2(1:160); class_2 = Ty2(161:960);

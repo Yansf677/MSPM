@@ -23,9 +23,9 @@ options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
 %    end
 % end
 % pc = find(RMSE==min(RMSE));
-pc = 5; % base on the above crossvalidation
-[t, u, Kc, K, ~] = kpls(X_train, Y_train, pc, options);
-
+k = 8; % base on the above crossvalidation
+[t, u, Kc, K, ~] = kpls(X_train, Y_train, k, options);
+pc=1:k;
 M = u(:,pc) / (t(:,pc)' * Kc * u(:,pc)) * t(:,pc)' * Y_train;
 [Um, Sm, Vm] = svd(M * M');
 
@@ -70,10 +70,10 @@ for i = 1:160
 end
 for i = 161:960
     if Ty2(i) > Ty_ctrl
-       FAR_Ty = FAR_Ty + 1;
+       FDR_Ty = FDR_Ty + 1;
     end                     
     if Tx2(i) > Tx_ctrl
-       FAR_Tx = FAR_Tx + 1;
+       FDR_Tx = FDR_Tx + 1;
     end                   
 end
 FAR_Ty = FAR_Ty / 160; FAR_Tx = FAR_Tx / 160;
