@@ -1,14 +1,23 @@
 ## Methods for process monitoring
 
-## Content of each method
+# Content of each method
 
-* 
+* TEdata .mat
 
-## References
+* monitoring scheme .m
+
+* roc_curves .m
+
+# References
+* PCA
 
 * PCR & KPCR: 
 
 * PLS:
+
+* TPLS:
+
+* CPLS:
 
 * KPLS:
 
