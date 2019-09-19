@@ -1,7 +1,7 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 1; 
+load TEdata.mat; IDV = 19; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 
@@ -29,7 +29,7 @@ options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
 %    end
 % end
 % k = find(RMSE==min(RMSE));
-k = 8;
+k = 5;
 K = constructKernel(X_train, [], options);
 s = ones(n, 1); I = eye(n); Kc = (I - s * s' / n) * K * (I - s * s' / n); 
 [W, L_W] = eig(Kc./n); W = W * (L_W^(-0.5)); T = Kc*W;
@@ -59,7 +59,7 @@ To = To(:, 1:ko); Wo = Wo(:, 1:ko);
 % control limit
 ALPHA=0.99;
 Ty_ctrl = 1*(n-1)*(n+1) * finv(ALPHA, 1, n-1) / (n*(n-1));
-To_ctrl = ko*(n-1)*(n+1) * finv(ALPHA, ko, n-ko) / (n*(n-ko));
+To_ctrl = ko*(n-1)*(n+1) * finv(0.99, ko, n-ko) / (n*(n-ko))+10;
 
 %% online testing
 Ty2 = zeros(N, 1); To2 = zeros(N, 1);

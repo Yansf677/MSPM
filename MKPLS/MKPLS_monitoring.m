@@ -1,7 +1,7 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 2; 
+load TEdata.mat; IDV = 19; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 

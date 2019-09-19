@@ -23,7 +23,7 @@ options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
 %    end
 % end
 % pc = find(RMSE==min(RMSE));
-pc = 5; % base on the above crossvalidation
+pc = 2; % base on the above crossvalidation
 [t, u, Kc, K, ~] = kpls(X_train, Y_train, pc, options);
 
 T2 = zeros(n, 1); Q = zeros(n, 1);s = ones(n,1); I = eye(n);

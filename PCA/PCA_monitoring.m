@@ -2,7 +2,7 @@ clc
 clear
 
 %% data preprocessing
-load TEdata.mat; IDV = 19; 
+load TEdata.mat; IDV = 1; 
 X_train = data(:, [1:22,42:52], 22);
 X_test = data(:, [1:22,42:52], IDV);
 
@@ -67,11 +67,11 @@ FAR_T = FAR_T / 160; FAR_Q = FAR_Q / 160;
 FDR_T = FDR_T / 800; FDR_Q = FDR_Q / 800;
 
 % ROC curves including f1-score
-class_1 = T2(1:160); class_2 = T2(161:960);
-figure; roc_Ty = roc_curve(class_1, class_2);
-
-class_1 = Q(1:160); class_2 = Q(161:960);
-figure; roc_To = roc_curve(class_1, class_2);
+% class_1 = T2(1:160); class_2 = T2(161:960);
+% figure; roc_Ty = roc_curve(class_1, class_2);
+% 
+% class_1 = Q(1:160); class_2 = Q(161:960);
+% figure; roc_To = roc_curve(class_1, class_2);
 
 % statistics plot
 figure;

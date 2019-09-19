@@ -1,7 +1,7 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 21; 
+load TEdata.mat; IDV = 5; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 
@@ -22,6 +22,7 @@ for i = 1:m
    end
 end
 pc = find(RMSE==min(RMSE));
+%pc = 20;
 [T, P, Q] = pcr(X_train, Y_train, pc);
 Y_e = T * Q';
 
@@ -81,7 +82,7 @@ FDR_Ty = FDR_Ty / 800; FDR_To = FDR_To / 800;
 class_1 = Ty2(1:160); class_2 = Ty2(161:960);
 figure; roc_Ty = roc_curve(class_1, class_2);
 
-class_1 = To2(1:160); class_2 = To2(161:960);
+class_1 = To2(1:160); class_2 = To2(201:960);
 figure; roc_To = roc_curve(class_1, class_2);
 
 % statistics plot

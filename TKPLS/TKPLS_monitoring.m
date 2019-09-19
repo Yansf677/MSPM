@@ -1,11 +1,10 @@
 clc
 clear
 %% data preprocessing
-load TEdata.mat; IDV = 21; 
+load TEdata.mat; IDV = 19; 
 X_train = data(:, [1:22,42:52], 22); Y_train = data(:, 35, 22);
 X_test = data(:, [1:22,42:52], IDV); Y_test = data(:, 35, IDV);
 
-[~, m] = size(X_train); [n, p] = size(Y_train);
 [X_train, Xmean, Xstd] = zscore(X_train); [Y_train, Ymean, Ystd] = zscore(Y_train);
 [N, ~] = size(X_test);
 X_test = (X_test - repmat(Xmean, N, 1))./repmat(Xstd, N, 1); Y_test = (Y_test - repmat(Ymean, N, 1))./repmat(Ystd, N, 1);
@@ -23,7 +22,7 @@ options.KernelType = 'Gaussian'; options.t = sqrt(5000/2);
 %    end
 % end
 % pc = find(RMSE==min(RMSE));
-k = 8; % base on the above crossvalidation
+k = 5; % base on the above crossvalidation
 [t, u, Kc, K, ~] = kpls(X_train, Y_train, k, options);
 pc = 1:k;
 s = ones(n,1); I = eye(n);
@@ -102,7 +101,7 @@ FAR_Ty = 0; FDR_Ty = 0;
 FAR_To = 0; FDR_To = 0;
 FAR_Tr = 0; FDR_Tr = 0;
 FAR_Qr = 0; FDR_Qr = 0;
-for i = 1:160
+for i = 1:200
     if Ty2(i) > Ty_ctrl
        FAR_Ty = FAR_Ty + 1;
     end
